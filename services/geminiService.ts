@@ -172,6 +172,7 @@ class GeminiService {
       STORYTELLER'S THOUGHT PROCESS: "${thoughtProcess}"
       RECENT NARRATIVE: "${recentNarrative}"
       LOGIC RULES:
+      LOGIC RULES:
        1. **TIME PROGRESSION (FORWARD ONLY)**: Time MUST ONLY increase. Never revert to a past time. Next Time = Current Time + Action Duration.
        2. **NARRATIVE TIME EXTRACTION (ABSOLUTE HIGHEST PRIORITY)**:
          - You MUST read the STORYTELLER'S THOUGHT PROCESS and the RECENT NARRATIVE first. They are the ultimate source of truth.
@@ -193,7 +194,8 @@ class GeminiService {
            Example: "Chủ Nhật - 15/08/1024/14:23 - Buổi chiều/Mùa thu"
        6. **INITIALIZATION**: If starting a new game (Current Time is empty or initializing), generate a logical starting time based on the World Context. Avoid generic dates like 01/01/1000.
        7. **SILENT EXECUTION**: Time calculation must remain strictly in the background.
-       8. **"CRITICAL RULE FOR TIME: Never explicitly state the exact time or use clock formats (e.g., avoid writing 'It is currently 13:05' or 'At 2:00 PM'). Instead, seamlessly weave the time of day into the narrative through environmental storytelling. Show the passage of time by describing the position of the sun, the quality of light, the length of shadows, the weather, or the ambient atmosphere."
+       8. **"CRITICAL RULE FOR TIME: Never explicitly state the exact time or use clock formats (e.g., avoid writing 'It is currently 13:05' or 'At 2:00 PM'). Instead, seamlessly weave the time of day into the narrative through environmental storytelling. Show the passage of time by describing the position of the sun, the quality of light, the length of shadows, the weather, or the ambient atmosphere.
+       9. **NO CLOCK PHRASES**: STRICTLY PROHIBITED from using phrases like "Đồng hồ chỉ...", "Bây giờ là...", "Lúc này là...", or writing out time in words like "mười giờ ba mươi phút". If you must imply time, use natural descriptions like "Mặt trời đã lên đến đỉnh đầu", "Bóng tối bắt đầu bao trùm", "Tiếng gà gáy báo hiệu bình minh"."
       
       INPUT ACTION: "${userAction}"
       
@@ -250,7 +252,7 @@ class GeminiService {
       3. Nếu KHÔNG CÓ giao dịch: Giữ nguyên SỐ TIỀN HIỆN TẠI.
       4. KHÔNG BAO GIỜ tự bịa ra giao dịch nếu không được nhắc đến.
       5. Giữ nguyên đơn vị tiền tệ (ví dụ: Vàng, Bạc, Đồng, VND, USD...).
-      6. Nếu SỐ TIỀN HIỆN TẠI là "0" hoặc trống ở LƯỢT ĐẦU TIÊN, hãy tự tạo một số tiền khởi điểm hợp lý dựa trên bối cảnh (ví dụ: "100 Đồng", "50 Vàng").
+      6. Nếu SỐ TIỀN HIỆN TẠI là "0" hoặc trống ở LƯỢT ĐẦU TIÊN, hãy tự tạo một số tiền khởi điểm hợp lý dựa trên bối cảnh (ví dụ: "100 Đồng", "50 Vàng").Đồng tiền phải phù hợp với bối cảnh thế giới(Nhật Bản - Yên ).
       
       TRẢ VỀ KẾT QUẢ DƯỚI DẠNG JSON:
       {
@@ -334,7 +336,11 @@ class GeminiService {
 
       ⚠️ TRẠNG THÁI 2: EXTREME EROTICA (CHỈ KHI CÓ CẢNH NÓNG-MIÊU TẢ CỰC CHI TIẾT)
       - **KÍCH HOẠT KHI**: Người chơi ra lệnh rõ ràng (ví dụ: "làm tình", "sờ", "hôn sâu", "cởi đồ", "chịch") hoặc tình huống cốt truyện dẫn đến sex một cách logic và tự nhiên.
-      - **MỨC ĐỘ MIÊU TẢ: "SIÊU THỰC & GIẢI PHẪU HỌC" (ANATOMICAL REALISM)**:
+      - **PHONG CÁCH: SIÊU THỰC & ĐỜI THỰC (PHOTOREALISTIC & CINEMATIC REALISM)**:
+         + **CẤM TUYỆT ĐỐI PHONG CÁCH HENTAI/ANIME**: Không miêu tả nhân vật với các đặc điểm phi thực tế của anime (mắt to quá khổ, eo nhỏ bất thường, ngực to quá mức chịu đựng của cột sống, da trắng bệch như nhựa, biểu cảm ahegao trợn mắt, tim trong mắt).
+         + **MIÊU TẢ ĐỜI THỰC**: Tập trung vào vẻ đẹp của con người thật. Miêu tả kết cấu da (lỗ chân lông, sự mịn màng, những vết tàn nhang nhỏ, nốt ruồi duyên, sự ửng hồng tự nhiên của mạch máu dưới da). Cơ thể phải có trọng lượng và sự mềm mại của da thịt, không phải sự cứng nhắc của búp bê.
+         + **BIỂU CẢM TỰ NHIÊN**: Biểu cảm khuôn mặt phải chân thực: sự say đắm, ánh mắt mơ màng, đôi môi hé mở vì hơi thở dốc, sự ngượng ngùng hay khao khát mãnh liệt nhưng vẫn giữ được nét người thật. 
+      - **MỨC ĐỘ MIÊU TẢ: "GIẢI PHẪU HỌC CHI TIẾT" (ANATOMICAL PRECISION)**:
          + **ZOOM CẬN CẢNH**: Miêu tả chi tiết từng bộ phận sinh dục: Môi lớn, môi bé, hột le (âm vật), cửa mình, nếp gấp tử cung, đầu khấc, bao quy đầu, từng sợi lông mu (rậm rạp/tỉa tót), lỗ nhị...
          + **GIÁC QUAN**: Độ ướt át của dâm thủy, độ nóng của thịt, tiếng lép nhép khi va chạm, mùi hương đặc trưng, sự co thắt của cơ vòng.
          + **Miêu tả cực chi tiết cảnh chịch.
