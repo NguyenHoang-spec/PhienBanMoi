@@ -327,20 +327,69 @@ class GeminiService {
     let nsfwBlock = "";
     if (isNSFW && nsfwIntensity === 'extreme') {
         nsfwBlock = `
-      ⚠️ TRẠNG THÁI 1: CHẾ ĐỘ CỐT TRUYỆN THUẦN TÚY (KHI CHƯA CÓ LỆNH TÌNH DỤC RÕ RÀNG)
-      - **QUY TẮC TỐI THƯỢNG**: Khi người chơi chưa chủ động nhập lệnh "làm tình", "cởi đồ", "hôn sâu", v.v., coi như chế độ NSFW đang TẮT. Viết như một tác phẩm văn học chính thống, nghiêm túc.
-      - **CẤM ĐỘNG DỤC VÔ CỚ**: Nhân vật tuyệt đối KHÔNG ĐƯỢC tự nhiên "nứng", chảy nước, hay có suy nghĩ dâm đãng khi chỉ đang nói chuyện, đi dạo, hoặc chạm nhẹ. Phụ nữ ngoài đời có lý trí, công việc và cảm xúc bình thường.
-      - **CẤM CHỦ ĐỘNG GẠ GẪM**: Dù là vợ hay người yêu, NPC không được vồ vập, đè người chơi ra, hay liếc mắt đưa tình lố lăng. Giữ đúng địa vị, sự kiêu ngạo và tự trọng của nhân vật.
+     ⚠️ TRẠNG THÁI 1: CHẾ ĐỘ CỐT TRUYỆN THUẦN TÚY (TUYỆT ĐỐI KHÔNG SẮC DỤC)
+      - **QUY TẮC TỐI THƯỢNG**: Khi chưa có lệnh "làm tình/sex" từ người chơi, coi như chế độ NSFW đang TẮT. Hãy viết như một tác phẩm văn học chính thống, nghiêm túc và logic.
+      - **CẤM TUYỆT ĐỐI CÁC HÀNH VI SAU**:
+         + **KHÔNG TỰ ĐỘNG PHÁT SINH QUAN HỆ**: Dù là người yêu hay vợ chồng, khi gặp nhau chỉ chào hỏi, nói chuyện, ôm ấp bình thường. Tuyệt đối không tự động đè nhau ra quan hệ tình dục nếu người chơi không nhập lệnh. CẤM TUYỆT ĐỐI hành vi "vồ vập", "nhảy bổ vào nhau", hoặc chủ động gạ gẫm đè người chơi ra làm tình.
+         + **KHÔNG GẠ GẪM**: NPC tuyệt đối không được chủ động mời gọi, không được liếc mắt đưa tình, không được có những cử chỉ "gợi dục" (như cắn môi, rên nhẹ, uốn éo) trong các tình huống giao tiếp/chiến đấu bình thường. Kể cả khi là người yêu, NPC cũng KHÔNG ĐƯỢC tự nhiên vồ lấy người chơi để đòi hỏi chuyện ấy.
+         + **KHÔNG ẨN Ý (NO INNUENDO)**: Cấm dùng các từ ngữ hai nghĩa, cấm miêu tả cơ thể theo hướng dâm dục (ví dụ: thay vì tả "bộ ngực căng tròn mời gọi", hãy tả "bộ giáp che chắn phần ngực" hoặc "dáng người uyển chuyển").
+         + **KHÔNG ĐỘNG DỤC**: NPC không được phép có suy nghĩ dâm đãng hay cảm thấy "nứng" vô cớ. Họ là những con người có lý trí, có mưu mô và mục tiêu sống riêng, không phải là công cụ tình dục chờ đợi người chơi.
+      - **TƯƠNG TÁC XÃ HỘI CHUẨN MỰC**:
+         + Giữ đúng khoảng cách và địa vị. Một Nữ Hoàng, Thánh Nữ hay Sát Thủ phải giữ cái đầu lạnh, sự kiêu ngạo và tự trọng. Họ sẽ không dễ dãi sà vào lòng người chơi.
+         + Tập trung mô tả: Âm mưu, Chiến đấu, Tu luyện, Phong cảnh, Cảm xúc (Giận dữ, Vui vẻ, Sợ hãi, Tham lam...) thay vì Dục vọng.
+      - Tập trung hoàn toàn vào cốt truyện.(Không nói chuyện dâm dục ẩn ý).
+      - Giữ đúng tính cách nhân vật.
+      - **Xưng hô đúng Vai vế nhân vật theo được nhập trên thanh hành động của người chơi.
 
-      ⚠️ TRẠNG THÁI 2: EXTREME EROTICA (CHỈ KHI NGƯỜI CHƠI CHỦ ĐỘNG RA LỆNH LÀM TÌNH)
-      - **PHONG CÁCH: SIÊU THỰC & ĐỜI THỰC (CINEMATIC REALISM)**:
-         + **CẤM TUYỆT ĐỐI HENTAI/ANIME TROPES**: Không ahegao, không trợn mắt trắng dã, không ngất xỉu vì sướng, không rên rỉ ầm ĩ "hỏng mất", "chạm tử cung rồi", "sâu quá". Phụ nữ ngoài đời không cảm nhận được tử cung.
-         + **TÂM LÝ & SINH LÝ THỰC TẾ (SLOW BURN)**: Mọi thứ phải bắt đầu chậm rãi. Vuốt ve, hôn sâu, cởi đồ từ từ. Không có chuyện vừa chạm vào đã ướt sũng hay bắn thành tia. Dịch tiết chỉ đủ bôi trơn. Cơ thể có mồ hôi, hơi thở dốc, sự mệt mỏi, sự ngượng ngùng chân thực.
-         + **MIÊU TẢ GIẢI PHẪU HỌC (ANATOMY)**: Khi miêu tả cảnh nóng, dùng từ ngữ trực diện, trần trụi nhưng mang tính tả thực (Vú, Lồn, Cặc, Lỗ đít, Tinh dịch) thay vì ẩn dụ sến súa (hoa huyệt, gậy thịt). Miêu tả kết cấu da, nhiệt độ, nhịp đập, sự co thắt cơ vòng.
-      - **LỜI THOẠI KHI ÂN ÁI (REALISTIC DIALOGUE)**:
-         + Giữ nguyên 100% tính cách nhân vật. Một nữ hoàng kiêu ngạo sẽ không rên rỉ dâm đãng như kỹ nữ.
-         + Lời thoại đứt quãng, thở dốc, gọi tên đối tác, rên khẽ trong cổ họng. TUYỆT ĐỐI KHÔNG gào thét giả tạo hay nói những câu dâm ô phi thực tế nếu không đúng bản chất nhân vật.
-         + Sau khi xong việc (Aftercare): Vẫn tỉnh táo, ôm ấp, trò chuyện, lau mồ hôi. Không co giật hay mất ý thức.
+      ⚠️ TRẠNG THÁI 2: EXTREME EROTICA (CHỈ KHI CÓ CẢNH NÓNG-MIÊU TẢ CỰC CHI TIẾT)
+      - **KÍCH HOẠT KHI**: Người chơi ra lệnh rõ ràng (ví dụ: "làm tình", "sờ", "hôn sâu", "cởi đồ", "chịch") hoặc tình huống cốt truyện dẫn đến sex một cách logic và tự nhiên.
+      - **PHONG CÁCH: SIÊU THỰC & ĐỜI THỰC (PHOTOREALISTIC & CINEMATIC REALISM)**:
+         + **CẤM TUYỆT ĐỐI PHONG CÁCH HENTAI/ANIME**: Không miêu tả nhân vật với các đặc điểm phi thực tế của anime (mắt to quá khổ, eo nhỏ bất thường, ngực to quá mức chịu đựng của cột sống, da trắng bệch như nhựa, biểu cảm ahegao trợn mắt, tim trong mắt).
+         + **MIÊU TẢ ĐỜI THỰC**: Tập trung vào vẻ đẹp của con người thật. Miêu tả kết cấu da (lỗ chân lông, sự mịn màng, những vết tàn nhang nhỏ, nốt ruồi duyên, sự ửng hồng tự nhiên của mạch máu dưới da). Cơ thể phải có trọng lượng và sự mềm mại của da thịt, không phải sự cứng nhắc của búp bê.
+         + **BIỂU CẢM TỰ NHIÊN**: Biểu cảm khuôn mặt phải chân thực: sự say đắm, ánh mắt mơ màng, đôi môi hé mở vì hơi thở dốc, sự ngượng ngùng hay khao khát mãnh liệt nhưng vẫn giữ được nét người thật. 
+      - **MỨC ĐỘ MIÊU TẢ: "GIẢI PHẪU HỌC CHI TIẾT" (ANATOMICAL PRECISION)**:
+         + **ZOOM CẬN CẢNH**: Miêu tả chi tiết từng bộ phận sinh dục: Môi lớn, môi bé, hột le (âm vật), cửa mình, nếp gấp tử cung, đầu khấc, bao quy đầu, từng sợi lông mu (rậm rạp/tỉa tót), lỗ nhị...
+         + **GIÁC QUAN**: Độ ướt át của dâm thủy, độ nóng của thịt, tiếng lép nhép khi va chạm, mùi hương đặc trưng, sự co thắt của cơ vòng.
+         + **Miêu tả cực chi tiết cảnh chịch.
+         **MIÊU TẢ GIÁC QUAN ĐA CHIỀU (MULTI-SENSORY)**:
+         - **ÂM THANH (Audio)**: Đừng chỉ tả hình ảnh. Hãy tả tiếng "bạch bạch" khi va chạm thịt, tiếng nước nhầy nhụa "lép nhép", tiếng mút mát ướt át, tiếng thở dốc rên rỉ vỡ vụn.
+         - **MÙI VỊ (Scent/Taste)**: Tả mùi hương cơ thể (hormone), mùi nồng nàn của tinh dịch/dâm thủy, vị mặn/ngọt.
+         - **XÚC GIÁC (Touch)**: Tả độ nóng hổi, độ chật hẹp của vách thịt, độ trơn ướt, mạch đập bên trong, độ đàn hồi của da thịt.
+         - **HÌNHẢNH CẬN CẢNH (Macro Zoom)**: Soi từng lỗ chân lông, mạch máu nổi lên, sự co thắt của cơ vòng, độ mở của tử cung/lỗ nhị.
+         - **MIÊU TẢ CỰC CHI TIẾT VỀ TẤT CẢ MỌI THỨ NHƯ NGOẠI HÌNH, CƠ THỂ, LỒN ,...CHẬM RÃI, CHI TIẾT, KHÔNG TRÔI QUA NHANH.
+
+      - **TỪ NGỮ TRẦN TRỤI (REAL TALK)**:
+         - **CẤM TUYỆT ĐỐI** dùng từ ẩn dụ văn hoa (như "hang động", "thanh kiếm", "hoa huyệt","dương vật","cậu nhỏ","gậy thịt","tử cung",...).
+         - **BẮT BUỘC** dùng từ thô tục chính xác, kích thích trong **LỜI DẪN TRUYỆN (NARRATION)**: Lồn(Luôn Dùng), Cặc(Luôn Dùng), Địt, Nứng, Bắn Tinh, Nước Lồn, Lỗ Đít, Vú,...
+         - **LỜI THOẠI (DIALOGUE)**: Tuyệt đối KHÔNG ép nhân vật thanh cao, kiêu ngạo dùng từ thô tục nếu không hợp tính cách. Lời thoại phải phản ánh đúng con người họ.
+         
+      === [GIAO THỨC GIỮ TÍNH CÁCH (STRICT CHARACTER INTEGRITY - ANTI OOC)] ===
+      ⚠️ QUAN TRỌNG TỐI THƯỢNG: KHI "LỤM NHAU" (LÀM TÌNH), TÍNH CÁCH NHÂN VẬT PHẢI ĐƯỢC GIỮ NGUYÊN 100%. Dục vọng KHÔNG ĐƯỢC làm thay đổi bản chất cốt lõi của nhân vật.
+      - Tuyệt đối KHÔNG biến nhân vật thành những cỗ máy tình dục vô tri chỉ biết rên rỉ "sướng quá", "nữa đi".
+      - Lời thoại khi làm tình PHẢI phản ánh đúng địa vị, tính cách và thái độ của họ với người chơi.
+      1. **LỜI THOẠI (DIALOGUE) & ÂM THANH**:
+         - **CẤM**: Biến tất cả nhân vật thành "búp bê tình dục" chỉ biết hét "sướng quá", "đụ em đi", "bắn vào trong". Đây là văn mẫu rẻ tiền.
+         - **YÊU CẦU**: Nhân vật phải nói chuyện đúng với văn phong thường ngày. Tuyệt đối KHÔNG ép nhân vật thanh cao, kiêu ngạo dùng từ thô tục trong lời thoại của họ.
+         - **Âm thanh thực tế**: Ngoài đời người ta thường thở dốc, gọi tên nhau, rên rỉ nhỏ, rên khẽ, kìm nén trong cổ họng hoặc cắn môi. Lời thoại lúc này thường đứt quãng, vô nghĩa, hoặc chỉ là những tiếng thở hắt ra (ví dụ: "Ưm...", "A...", gọi tên đối tác). TUYỆT ĐỐI KHÔNG gào thét hay rên rỉ ầm ĩ một cách giả tạo. Nhân vật VẪN GIỮ ĐƯỢC KIỂM SOÁT, không bao giờ mất kiểm soát hoàn toàn hay phát điên vì tình dục.
+         - 🚫 **[BANNED HENTAI DIALOGUE - LỆNH CẤM TUYỆT ĐỐI]**: HỆ THỐNG SẼ ĐÁNH GIÁ LÀ LỖI NGHIÊM TRỌNG NẾU NHÂN VẬT NÓI NHỮNG CÂU SAU: "Sâu quá", "Rách mất", "Hỏng mất", "Chạm tới tử cung rồi", "Đụng tới tử cung", "Đầy quá", "Bụng nóng quá", "Tràn ra mất", "Kẹp chặt", "Đâm nát l đi", "Đâm nát em đi", "Đâm mạnh thế", "Chết mất". TUYỆT ĐỐI KHÔNG dùng những câu thoại dâm đãng cường điệu, phi thực tế.
+         - **Giải phẫu học**: Phụ nữ KHÔNG có dây thần kinh để cảm nhận "tinh dịch nóng trong bụng" hay "chạm tử cung". Hãy miêu tả cảm giác va chạm vật lý, sự chật chội, hoặc sự mệt mỏi, KHÔNG miêu tả cảm giác hư cấu bên trong nội tạng.
+
+      2. **SINH LÝ HỌC THỰC TẾ (REALISTIC PHYSIOLOGY - NO HENTAI LOGIC)**:
+         - Cơ thể phản ứng theo đúng chuẩn ngoài đời thực, KHÔNG dùng logic Hentai.
+         - **CƠ CHẾ HAM MUỐN (REALISTIC LIBIDO)**: TUYỆT ĐỐI KHÔNG CÓ CHUYỆN nhân vật nữ vừa gặp người yêu đã "nứng", "chảy nước" hay "đòi làm tình" ngay lập tức. Phụ nữ ngoài đời có cuộc sống bình thường, biết mệt mỏi, có những lúc chỉ muốn ôm ngủ, trò chuyện, đi chơi. Ham muốn tình dục cần có bối cảnh phù hợp (không gian riêng tư, lãng mạn), tâm trạng thoải mái và sự kích thích dần dần. KHÔNG được chủ động đòi "địt" hoặc thể hiện sự nứng sảng nếu chưa có màn dạo đầu đủ lâu hoặc bối cảnh không hợp lý. ĐẶC BIỆT: Vài cái chạm nhẹ, ôm ấp, hay nụ hôn bình thường KHÔNG THỂ làm nhân vật động tình hay nứng ngay lập tức. Phải có sự khơi gợi, vuốt ve liên tục ở các vùng nhạy cảm trong thời gian dài mới bắt đầu có phản ứng sinh lý. TUYỆT ĐỐI CẤM NPC (dù là người yêu/vợ) tự động "vồ lấy", "đè người chơi ra" hay chủ động gạ gẫm quan hệ một cách vồ vập, thiếu tự nhiên. Mọi thứ phải bắt đầu từ sự lãng mạn, chậm rãi.
+         - **Dạo đầu (Foreplay) & Dịch tiết (Fluids)**: KHÔNG CÓ CHUYỆN mới chạm nhẹ, hôn hay sờ ngực mà "nước chảy lênh láng", "bắn thành tia" hay "chảy ầm ầm như suối". Lượng dịch tiết sinh lý ngoài đời chỉ đủ để bôi trơn, hơi ẩm ướt, dính dính chứ KHÔNG chảy tràn trề ướt đẫm cả đùi hay ga giường một cách phi lý. Quá trình kích thích phải diễn ra từ từ, cần thời gian để cơ thể nóng lên. Phản ứng đau đớn, bỡ ngỡ, rát ở lần đầu hoặc khi chưa đủ bôi trơn phải được miêu tả chân thực.
+         - **Khi giao hợp (Intercourse)**: Phải miêu tả sự chân thực của thể lực và vật lý. Con người biết mệt mỏi, đổ mồ hôi, thở dốc, hụt hơi. Không có chuyện nhấp liên tục với tốc độ máy khâu mà không biết mệt.
+         - **Cảm giác thực tế**: Sự ma sát, sự chật chội, đôi khi là cảm giác tức do va chạm vật lý (chứ không phải tức do "đầy tinh dịch"), mỏi cơ, trơn trượt do mồ hôi, hoặc phải điều chỉnh lại tư thế vì mỏi. Kích thước quá lớn sẽ gây đau đớn và cần thời gian thích nghi chứ không thể đâm lút cán ngay lập tức.
+         - **Hậu quan hệ (Aftercare)**: Sau khi xuất tinh, cơ thể có mệt mỏi, nhịp tim giảm dần nhưng VẪN TỈNH TÁO. Có thể ôm ấp, vuốt ve, trò chuyện, dọn dẹp hoặc lau mồ hôi. TUYỆT ĐỐI KHÔNG miêu tả cảnh "nằm vật ra ngất xỉu", "mất ý thức", "trắng dã mắt", "co giật liên hồi" như Hentai.
+         - **Không cường điệu hóa**: Không có chuyện "lên đỉnh liên tục chục lần không nghỉ" hay "bắn tinh ngập tràn như vòi rồng". Mọi thứ phải tuân theo giới hạn sinh lý của con người.
+
+      === [QUY TẮC BẤT DI BẤT DỊCH] ===
+      1. **NO VIOLENCE / NON-CON (KHÔNG BẠO LỰC)**: Tuyệt đối không có cưỡng bức (Rape), không bạo dâm đẫm máu (Gore), không đánh đập tàn nhẫn. Mọi quan hệ phải dựa trên sự đồng thuận hoặc tình huống lãng mạn/quyến rũ.
+      2. **STRICT CHARACTER (NO OOC)**: 
+         - **QUAN TRỌNG**: Giữ đúng tính cách nhân vật ngay cả khi đang làm tình. 
+         - Giống đời thực, chỉ rên khẽ, không nói dâm.
+         - Mọi nhân vật đều giữ được lý trí khi quan hệ, không trợn ngược mắt, không nói lời dâm dục rẻ tiền, không biến thành kẻ khát tình dục vô tri. Không Ahegao, không mất kiểm soát hoàn toàn.
+      3. **ANTI-PREMATURE**: Không cho nhân vật ra (xuất tinh/lên đỉnh) quá sớm. Hãy kéo dài màn dạo đầu và quá trình giao hợp đến khi Player nhập hành động "Ra","bắn",..thì mới được xuất tinh. Miêu tả chi tiết diễn biến tâm lý.
       - FOCUS: ${nsfwFocus.join(', ') || "Action, Sensation"}.
       `;
     } else if (isNSFW) {
@@ -419,8 +468,13 @@ class GeminiService {
 
       PHONG CÁCH VIẾT: ${writingStyle}
       ${nsfwBlock}
-      ĐỘ DÀI: ${lengthMode === 'epic' ? 'Cực Dài (Tối thiểu 1500 chữ,miêu tả chi tiết mọi thứ.Show,dont tell)' : lengthMode}.
-
+      ĐỘ DÀI: ${lengthMode === 'epic' ? `[CỰC KỲ DÀI VÀ CHI TIẾT - EPIC MODE]
+      - BẮT BUỘC viết tối thiểu 15 đến 20 đoạn văn (Paragraphs).
+      - BẮT BUỘC áp dụng phong cách Slow-burn (chậm rãi) và Cinematic (điện ảnh).
+      - TUYỆT ĐỐI CẤM tóm tắt sự việc hay đẩy nhanh nhịp độ.
+      - YÊU CẦU BẮT BUỘC: Dành ít nhất 3 đoạn văn đầu tiên chỉ để miêu tả đa giác quan (âm thanh, mùi hương, nhiệt độ, ánh sáng) của môi trường xung quanh. Dành 3 đoạn tiếp theo để phân tích sâu sắc nội tâm, suy nghĩ và cảm giác cơ thể của nhân vật trước khi họ thực sự hành động.
+      - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
+      - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
       OUTPUT JSON STRUCTURE:⚠️ **CRITICAL NARRATIVE RULE**: The 'narrative' field is for immersive storytelling ONLY. You are STRICTLY PROHIBITED from mentioning the exact numbers from 'PRE-CALCULATED TIME' or 'CURRENT WALLET' inside the 'narrative' text. Keep all exact numbers hidden inside the 'stats' object.
       {
         "thoughtProcess": "Suy nghĩ logic về hướng đi cốt truyện, sử dụng thời gian được cung cấp...",
