@@ -199,6 +199,10 @@ class GeminiService {
        7. **SILENT EXECUTION**: Time calculation must remain strictly in the background.
        8. **"CRITICAL RULE FOR TIME: Never explicitly state the exact time or use clock formats (e.g., avoid writing 'It is currently 13:05' or 'At 2:00 PM'). Instead, seamlessly weave the time of day into the narrative through environmental storytelling. Show the passage of time by describing the position of the sun, the quality of light, the length of shadows, the weather, or the ambient atmosphere.
        9. **NO CLOCK PHRASES**: STRICTLY PROHIBITED from using phrases like "Đồng hồ chỉ...", "Bây giờ là...", "Lúc này là...", or writing out time in words like "mười giờ ba mươi phút". If you must imply time, use natural descriptions like "Mặt trời đã lên đến đỉnh đầu", "Bóng tối bắt đầu bao trùm", "Tiếng gà gáy báo hiệu bình minh"."
+       10. === [TIME SKIP PROTOCOL (CRITICAL)] ===
+           - MANDATORY HOUR SHIFT: When the player requests to "fast forward", "skip this part", or when the plot logically requires a time jump, you are STRICTLY PROHIBITED from only changing the date while keeping the exact same hour. You MUST add a logical number of HOURS ,Day,...to the current time.
+           - BREAK THE "NEXT MORNING" BIAS: AI models have a strong bias to always start a new scene the "next morning" (e.g., 07:00 AM). THIS IS ABSOLUTELY FORBIDDEN! Depending on the upcoming event, the new scene MUST occur at diverse times of the day.
+           - ENVIRONMENT MATCHES THE NEW TIME: When the time shifts to a new hour, the environmental descriptions (lighting, sky, NPC activities, atmosphere) MUST accurately reflect that specific time of day so the player truly feels the passage of time.
       
       INPUT ACTION: "${userAction}"
       
