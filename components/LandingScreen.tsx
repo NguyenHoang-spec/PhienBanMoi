@@ -61,7 +61,7 @@ const TECH_SPECS = [
 
 const UPDATE_LOGS = [
     {
-        version: "v5.1 -Hoàng Đẹp Trai",
+        version: "v5.1 -Gemini Embedding",
         date: "Mới nhất",
         author: "Nguyễn Hoàng",
         details: [
@@ -1217,7 +1217,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
 
             {/* VERSION DISPLAY */}
             <div className="text-3xl md:text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-jade-400 via-spirit-400 to-arcane-400 mt-2 mb-4 drop-shadow-lg animate-pulse-slow tracking-wider cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowUpdatesModal(true)}>
-                v5.1 - Có Bản Mới Rồi Đấy
+                v5.1 - Anh Độ Mixi Nà Ná Na Na
             </div>
 
             {/* NEW CREDIT LINE */}
