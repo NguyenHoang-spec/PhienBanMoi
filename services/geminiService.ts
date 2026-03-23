@@ -472,6 +472,7 @@ class GeminiService {
       - BẮT BUỘC viết tối thiểu 15 đến 20 đoạn văn (Paragraphs).
       - BẮT BUỘC áp dụng phong cách Slow-burn (chậm rãi) và Cinematic (điện ảnh).
       - TUYỆT ĐỐI CẤM tóm tắt sự việc hay đẩy nhanh nhịp độ.
+      = Thực tế ,địt nhau giống đời thực.
       - YÊU CẦU BẮT BUỘC: Dành ít nhất 3 đoạn văn đầu tiên chỉ để miêu tả đa giác quan (âm thanh, mùi hương, nhiệt độ, ánh sáng) của môi trường xung quanh. Dành 3 đoạn tiếp theo để phân tích sâu sắc nội tâm, suy nghĩ và cảm giác cơ thể của nhân vật trước khi họ thực sự hành động.
       - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
       - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
