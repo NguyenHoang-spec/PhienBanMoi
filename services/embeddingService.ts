@@ -3,7 +3,8 @@ import { pipeline, env } from '@xenova/transformers';
 // Disable local models to force downloading from huggingface
 env.allowLocalModels = false;
 // Fix WASM path for production environments like Vercel/Netlify
-env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
+// The previous path was causing "no available backend found. ERR: [wasm] TypeError: Cannot read properties of undefined (reading 'buffer')"
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
 
 class LocalEmbeddingService {
     private extractor: any = null;
