@@ -19,6 +19,40 @@ function App() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
   
+  // Model Loading state
+  const [modelLoadingProgress, setModelLoadingProgress] = useState<{ [key: string]: number }>({});
+  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [modelLoadingStatus, setModelLoadingStatus] = useState<string>("");
+
+  // Subscribe to model loading progress
+  React.useEffect(() => {
+    const unsubscribe = localEmbeddingService.onProgress((progress: any) => {
+      if (progress.status === 'initiate') {
+        setIsModelLoading(true);
+        setModelLoadingStatus(`Khởi tạo tải: ${progress.file}...`);
+      } else if (progress.status === 'progress') {
+        setModelLoadingProgress(prev => ({
+          ...prev,
+          [progress.file]: progress.progress
+        }));
+        setModelLoadingStatus(`Đang tải dữ liệu trí nhớ...`);
+      } else if (progress.status === 'done') {
+        // We don't immediately hide to show 100% for a moment
+        setModelLoadingProgress(prev => ({
+          ...prev,
+          [progress.file]: 100
+        }));
+      } else if (progress.status === 'ready') {
+        setModelLoadingStatus("Hệ thống trí nhớ đã sẵn sàng!");
+        setTimeout(() => {
+          setIsModelLoading(false);
+          setModelLoadingProgress({});
+        }, 1000);
+      }
+    });
+    return unsubscribe;
+  }, []);
+  
   // Memory Processing state (Unified)
   const [isProcessingMemory, setIsProcessingMemory] = useState(false);
   const [memoryProgress, setMemoryProgress] = useState(0);
@@ -781,9 +815,51 @@ function App() {
   };
 
   // --- RENDER LOGIC WITH TRANSITION WRAPPER ---
+  const totalModelProgress = Object.values(modelLoadingProgress).length > 0 
+    ? Object.values(modelLoadingProgress).reduce((a, b) => a + b, 0) / Object.values(modelLoadingProgress).length 
+    : 0;
+
   return (
     <div key={step} className="w-full min-h-screen page-enter-active">
       <AnimatePresence>
+        {isModelLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+          >
+            <div className="max-w-md w-full bg-zinc-900 border border-indigo-500/30 p-8 rounded-3xl shadow-2xl text-center">
+              <div className="w-20 h-20 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-indigo-400">
+                <RefreshCw className="w-10 h-10 animate-spin" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Đang tải "Bộ Não" AI</h2>
+              <p className="text-zinc-400 text-sm mb-8">
+                Hệ thống đang tải mô hình ngôn ngữ cục bộ để giúp nhân vật có trí nhớ lâu dài. 
+                Quá trình này chỉ diễn ra một lần duy nhất.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                  <span className="text-indigo-400">{modelLoadingStatus}</span>
+                  <span className="text-white">{Math.round(totalModelProgress)}%</span>
+                </div>
+                <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden border border-white/5">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-indigo-600 to-violet-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${totalModelProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <p className="text-[10px] text-zinc-500 italic">
+                  Dung lượng khoảng 50MB. Vui lòng không đóng trình duyệt.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {isProcessingMemory && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
