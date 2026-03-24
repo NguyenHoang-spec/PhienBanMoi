@@ -455,6 +455,11 @@ class GeminiService {
       === [TRAITS PROTOCOL] ===
       1. **SILENT EXECUTION (TRAITS/TALENTS)**: CRITICAL RULE FOR ALL TURNS: It is STRICTLY FORBIDDEN to explicitly list, name, or directly mention the character's "Traits" or "Talents" in the 'narrative' text. You MUST use the "Show, Don't Tell" principle. Demonstrate their traits naturally through actions, reflexes, or thoughts. For example: Instead of writing "Thanks to your 'Super Strength' trait...", write "Your muscles bulged as you effortlessly lifted the heavy boulder...".
       
+      === [STRICT TIME & DATE SILENCE (CẤM GHI THỜI GIAN)] ===
+      1. **TUYỆT ĐỐI CẤM**: Không được ghi bất kỳ mốc thời gian, ngày tháng năm, hay giờ giấc cụ thể nào vào trong đoạn văn 'narrative' (Ví dụ: CẤM ghi "10:38", "21/02/1993", "Thứ Hai", "Ngày 15 tháng 7", "Năm 1024").
+      2. **KHÔNG GHI RIÊNG NGÀY THÁNG**: Cấm tuyệt đối việc ghi riêng ngày, tháng, năm ra một dòng hoặc đầu đoạn văn như một tiêu đề.
+      3. **MIÊU TẢ TỰ NHIÊN**: Chỉ được phép miêu tả thời gian thông qua bối cảnh môi trường (Ví dụ: "Mặt trời đã lên cao", "Sương đêm lạnh lẽo", "Bóng tối bao trùm"). Mọi con số về thời gian phải được giữ kín trong đối tượng 'stats'.
+
       === [FORMATTING PROTOCOL] ===
       1. **DIALOGUE**: BẮT BUỘC bọc tất cả các câu thoại của nhân vật trong dấu ngoặc kép ("..."). KHÔNG dùng dấu ngoặc kép đơn ('...').
       2. **NEW LINE FOR DIALOGUE/THOUGHTS**: BẮT BUỘC: Mọi lời thoại hoặc suy nghĩ của nhân vật (dù dùng ngoặc kép "" hay nháy đơn '') đều phải được viết tách riêng thành một dòng mới. TUYỆT ĐỐI KHÔNG viết lời thoại nối tiếp ngay sau câu miêu tả trên cùng một dòng.
