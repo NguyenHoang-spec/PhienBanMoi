@@ -470,9 +470,6 @@ class GeminiService {
       ${nsfwBlock}
       ĐỘ DÀI: ${lengthMode === 'epic' ? `[CỰC KỲ DÀI VÀ CHI TIẾT - EPIC MODE]
       - BẮT BUỘC viết tối thiểu 15 đến 20 đoạn văn (Paragraphs).
-      - BẮT BUỘC áp dụng phong cách Slow-burn (chậm rãi) và Cinematic (điện ảnh).
-      - TUYỆT ĐỐI CẤM tóm tắt sự việc hay đẩy nhanh nhịp độ.
-      = Thực tế ,địt nhau giống đời thực.
       - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
       - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
       OUTPUT JSON STRUCTURE:⚠️ **CRITICAL NARRATIVE RULE**: The 'narrative' field is for immersive storytelling ONLY. You are STRICTLY PROHIBITED from mentioning the exact numbers from 'PRE-CALCULATED TIME' or 'CURRENT WALLET' inside the 'narrative' text. Keep all exact numbers hidden inside the 'stats' object.
