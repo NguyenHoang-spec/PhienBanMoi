@@ -2,6 +2,8 @@ import { pipeline, env } from '@xenova/transformers';
 
 // Disable local models to force downloading from huggingface
 env.allowLocalModels = false;
+// Fix WASM path for production environments like Vercel/Netlify
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
 
 class LocalEmbeddingService {
     private extractor: any = null;
@@ -16,8 +18,8 @@ class LocalEmbeddingService {
         this.initPromise = new Promise(async (resolve, reject) => {
             try {
                 console.log("[Hệ thống Ký ức] Đang tải mô hình AI cục bộ (Local Embedding)...");
-                // Use a small, fast model for browser embedding
-                this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+                // Use a multilingual model for better Vietnamese support
+                this.extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
                 console.log("[Hệ thống Ký ức] Tải mô hình thành công!");
                 resolve();
             } catch (error) {
