@@ -1,10 +1,9 @@
-import { pipeline, env } from '@xenova/transformers';
+import { pipeline, env } from '@huggingface/transformers';
 
 // Disable local models to force downloading from huggingface
 env.allowLocalModels = false;
-// Fix WASM path for production environments like Vercel/Netlify
-// The previous path was causing "no available backend found. ERR: [wasm] TypeError: Cannot read properties of undefined (reading 'buffer')"
-env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/';
+// Tắt đa luồng (multi-threading) để sửa lỗi "reading 'buffer'" trên Netlify do thiếu SharedArrayBuffer
+env.backends.onnx.wasm.numThreads = 1;
 
 class LocalEmbeddingService {
     private extractor: any = null;
@@ -37,6 +36,7 @@ class LocalEmbeddingService {
                 
                 // Use a multilingual model for better Vietnamese support
                 this.extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
+                    dtype: 'q8',
                     progress_callback: (progress: any) => {
                         this.notifyProgress(progress);
                     }
