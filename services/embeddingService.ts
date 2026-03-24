@@ -9,6 +9,21 @@ class LocalEmbeddingService {
     private extractor: any = null;
     private isInitializing = false;
     private initPromise: Promise<void> | null = null;
+    private progressListeners: ((progress: any) => void)[] = [];
+
+    /**
+     * Subscribe to model loading progress
+     */
+    onProgress(callback: (progress: any) => void) {
+        this.progressListeners.push(callback);
+        return () => {
+            this.progressListeners = this.progressListeners.filter(cb => cb !== callback);
+        };
+    }
+
+    private notifyProgress(progress: any) {
+        this.progressListeners.forEach(cb => cb(progress));
+    }
 
     private async init() {
         if (this.extractor) return;
@@ -18,8 +33,14 @@ class LocalEmbeddingService {
         this.initPromise = new Promise(async (resolve, reject) => {
             try {
                 console.log("[Hệ thống Ký ức] Đang tải mô hình AI cục bộ (Local Embedding)...");
+                
                 // Use a multilingual model for better Vietnamese support
-                this.extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
+                this.extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2', {
+                    progress_callback: (progress: any) => {
+                        this.notifyProgress(progress);
+                    }
+                });
+                
                 console.log("[Hệ thống Ký ức] Tải mô hình thành công!");
                 resolve();
             } catch (error) {
