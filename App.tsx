@@ -26,6 +26,9 @@ function App() {
 
   // Subscribe to model loading progress
   React.useEffect(() => {
+    // Force local embedding to load immediately on app start
+    localEmbeddingService.embedTextLocal("warmup").catch(console.error);
+
     const unsubscribe = localEmbeddingService.onProgress((progress: any) => {
       if (progress.status === 'initiate') {
         setIsModelLoading(true);
@@ -241,7 +244,7 @@ function App() {
         setStep('game');
         
         // Trigger unified memory processing for restored session
-        processSessionMemory(newSessionId);
+        processSessionMemory(newSessionId, true);
     } catch (e) {
         console.error("Failed to restore session", e);
         alert("Lỗi khi nhập file save.");
@@ -268,14 +271,14 @@ function App() {
       setStep('game');
       
       // Trigger unified memory processing for existing session
-      processSessionMemory(sessionId);
+      processSessionMemory(sessionId, true);
     } catch (e) { console.error(e); alert("Lỗi khi hồi sinh thiên mệnh."); } finally { setLoading(false); }
   };
 
   // 1d. Unified Memory Processing: Migration (768 -> 384) then Recovery (missing/broken)
-  const processSessionMemory = async (sessionId: number) => {
+  const processSessionMemory = async (sessionId: number, force: boolean = false) => {
     // 1. Avoid redundant runs in the same app instance
-    if (processedSessions.current.has(sessionId)) return;
+    if (!force && processedSessions.current.has(sessionId)) return;
     processedSessions.current.add(sessionId);
 
     try {
@@ -285,7 +288,7 @@ function App() {
         // 2. Cooldown: Only auto-process every 30 minutes to avoid annoying the user
         const now = Date.now();
         const thirtyMinutes = 30 * 60 * 1000;
-        if (sessionObj.lastMemoryCheck && (now - sessionObj.lastMemoryCheck < thirtyMinutes)) {
+        if (!force && sessionObj.lastMemoryCheck && (now - sessionObj.lastMemoryCheck < thirtyMinutes)) {
             return;
         }
 
