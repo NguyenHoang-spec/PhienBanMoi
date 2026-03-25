@@ -129,6 +129,7 @@ class GeminiService {
       const geminiApiKeysStr = localStorage.getItem('td_gemini_api_keys');
       const validKeysCount = geminiApiKeysStr ? geminiApiKeysStr.split('\n').map(k => k.trim()).filter(k => k).length : 0;
       
+      // Key Rotation: Nếu có nhiều key và gặp lỗi 429/403, tự động chuyển sang Key tiếp theo
       if ((isRateLimit || isAuthError) && validKeysCount > 1 && retryCount < validKeysCount) {
         console.log(`%c[AI Rotation] ⚠️ Lỗi Key hiện tại. Tự động chuyển sang Key tiếp theo (Thử lại ${retryCount + 1}/${validKeysCount})...`, "color: #f59e0b; font-weight: bold;");
         this.updateConfig();
