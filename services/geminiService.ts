@@ -15,6 +15,9 @@ import {
   Ability
 } from '../types';
 
+import { getAiClient } from './aiClient';
+import { AppSettings } from '../types';
+
 // --- GLOBAL FETCH OVERRIDE FOR PROXY SUPPORT ---
 // This intercepts all fetch requests and redirects them to the proxy if configured.
 // This is necessary because the @google/genai SDK might bypass the custom httpClient in some cases.
@@ -76,9 +79,6 @@ try {
   console.error("[GeminiService] Không thể ghi đè fetch toàn cục", e);
 }
 // -----------------------------------------------
-
-import { getAiClient } from './ai/client';
-import { AppSettings } from '../types';
 
 const DEFAULT_MODEL = 'gemini-3.1-pro-preview';
 const ARCHIVIST_MODEL = 'gemini-3.1-pro-preview';
