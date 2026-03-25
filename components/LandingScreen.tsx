@@ -61,7 +61,7 @@ const TECH_SPECS = [
 
 const UPDATE_LOGS = [
     {
-        version: "v5.1 -Gemini Embedding",
+        version: "v5.1 -Hoàng Đẹp Trai",
         date: "Mới nhất",
         author: "Nguyễn Hoàng",
         details: [
@@ -327,6 +327,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   const [proxyModelMain, setProxyModelMain] = useState(localStorage.getItem('td_proxy_model_main') || localStorage.getItem('td_proxy_model') || '');
   const [proxyModelChronos, setProxyModelChronos] = useState(localStorage.getItem('td_proxy_model_chronos') || '');
   const [proxyModelArchivist, setProxyModelArchivist] = useState(localStorage.getItem('td_proxy_model_archivist') || '');
+  const [geminiApiKeys, setGeminiApiKeys] = useState(localStorage.getItem('td_gemini_api_keys') || '');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -1021,6 +1022,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
       localStorage.setItem('td_proxy_model_main', proxyModelMain);
       localStorage.setItem('td_proxy_model_chronos', proxyModelChronos);
       localStorage.setItem('td_proxy_model_archivist', proxyModelArchivist);
+      localStorage.setItem('td_gemini_api_keys', geminiApiKeys);
       setShowProxySettingsModal(false);
       window.location.reload();
   };
@@ -1217,7 +1219,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
 
             {/* VERSION DISPLAY */}
             <div className="text-3xl md:text-4xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-jade-400 via-spirit-400 to-arcane-400 mt-2 mb-4 drop-shadow-lg animate-pulse-slow tracking-wider cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowUpdatesModal(true)}>
-                v5.1 - Anh Độ Mixi Nà Ná Na Na
+                v5.1 - Có Bản Mới Rồi Đấy
             </div>
 
             {/* NEW CREDIT LINE */}
@@ -1535,13 +1537,25 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
               <div className="bg-ink-900 border border-emerald-500/30 rounded-xl w-full max-w-md shadow-2xl p-6">
                   <div className="flex justify-between items-center mb-6">
                      <h3 className="text-xl font-display font-bold text-emerald-400 flex items-center gap-2">
-                         <i className="fas fa-network-wired"></i> Cấu Hình Proxy
+                         <i className="fas fa-network-wired"></i> Cấu Hình API & Proxy
                      </h3>
                      <button onClick={() => setShowProxySettingsModal(false)} className="text-ink-500 hover:text-white"><i className="fas fa-times"></i></button>
                   </div>
                   
-                  <div className="space-y-6 mb-6">
-                       <div className="flex items-center justify-between">
+                  <div className="space-y-6 mb-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                       <div className="space-y-1">
+                           <label className="text-[10px] font-bold text-ink-500 uppercase">Danh sách API Key (Mỗi dòng 1 Key)</label>
+                           <textarea 
+                               value={geminiApiKeys}
+                               onChange={(e) => setGeminiApiKeys(e.target.value)}
+                               placeholder="AIzaSy...\nAIzaSy...\nAIzaSy..."
+                               rows={3}
+                               className="w-full bg-ink-950 border border-ink-800 rounded-lg px-3 py-2 text-xs text-parchment-200 focus:border-emerald-500/50 outline-none resize-none"
+                           />
+                           <div className="text-[10px] text-ink-500 mt-1">Hệ thống sẽ tự động xoay vòng (Round Robin) các key này nếu không dùng Proxy.</div>
+                       </div>
+
+                       <div className="flex items-center justify-between border-t border-white/5 pt-4">
                            <div>
                                <div className="text-sm font-bold text-parchment-200">Bật Proxy</div>
                                <div className="text-[10px] text-ink-500 mt-1">Sử dụng Proxy Server để bảo mật API Key hoặc vượt rào cản địa lý.</div>
