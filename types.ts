@@ -227,3 +227,10 @@ export interface TimekeeperResult {
   season?: string;
   environmentState: string;
 }
+
+export interface AppSettings {
+  geminiApiKey: string[]; // Danh sách các API Key
+  useProxy: boolean;
+  proxyUrl?: string;
+  proxyKey?: string; // Key dùng cho Proxy (nếu có)
+}
