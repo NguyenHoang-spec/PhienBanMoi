@@ -77,6 +77,9 @@ try {
 }
 // -----------------------------------------------
 
+import { getAiClient } from './ai/client';
+import { AppSettings } from '../types';
+
 const DEFAULT_MODEL = 'gemini-3.1-pro-preview';
 const ARCHIVIST_MODEL = 'gemini-3.1-pro-preview';
 const CHRONOS_MODEL = 'gemini-3.1-pro-preview';
@@ -98,38 +101,41 @@ class GeminiService {
 
   public updateConfig() {
     const useProxy = localStorage.getItem('td_use_proxy') === 'true';
-    const proxyUrl = localStorage.getItem('td_proxy_url');
-    const proxyKey = localStorage.getItem('td_proxy_key');
-    const proxyModel = localStorage.getItem('td_proxy_model');
+    const proxyUrl = localStorage.getItem('td_proxy_url') || undefined;
+    const proxyKey = localStorage.getItem('td_proxy_key') || undefined;
+    const geminiApiKeysStr = localStorage.getItem('td_gemini_api_keys');
+    const geminiApiKey = geminiApiKeysStr ? geminiApiKeysStr.split('\n').map(k => k.trim()).filter(k => k) : [];
 
-    if (useProxy && proxyUrl) {
-      // Initialize with Proxy. The global fetch override will handle the actual routing.
-      this.ai = new (GoogleGenAI as any)({
-        apiKey: "PROXY_MODE", // Dummy key to satisfy SDK
-        httpClient: {
-          fetch: (url: string, options: RequestInit) => {
-            const cleanProxy = proxyUrl.trim().replace(/\/+$/, '').replace(/\/v1beta$|\/v1$/, '');
-            
-            // Nếu URL đã là proxy url rồi thì cứ thế gọi (sẽ đi qua global fetch override)
-            if (url.includes(cleanProxy)) {
-              return window.fetch(url, options);
-            }
-            
-            // Nếu URL vẫn là của Google, thì thay thế bằng Proxy URL
-            const googleBase = 'https://generativelanguage.googleapis.com';
-            if (url.startsWith(googleBase)) {
-              const newUrl = url.replace(googleBase, cleanProxy);
-              return window.fetch(newUrl, options);
-            }
-            
-            // Fallback
-            return window.fetch(url, options);
-          }
-        }
-      });
-    } else {
-      // Default initialization
-      this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "DUMMY_KEY" });
+    const settings: AppSettings = {
+      useProxy,
+      proxyUrl,
+      proxyKey,
+      geminiApiKey
+    };
+
+    this.ai = getAiClient(settings);
+  }
+
+  private async generateContentWithRetry(params: any, retryCount: number = 0): Promise<any> {
+    try {
+      return await this.ai.models.generateContent(params);
+    } catch (apiError: any) {
+      console.error("API Call Error:", apiError);
+      
+      const errorMessage = apiError.message || "";
+      const isRateLimit = errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("exhausted");
+      const isAuthError = errorMessage.includes("400") || errorMessage.includes("API key not valid") || errorMessage.includes("403");
+      
+      const geminiApiKeysStr = localStorage.getItem('td_gemini_api_keys');
+      const validKeysCount = geminiApiKeysStr ? geminiApiKeysStr.split('\n').map(k => k.trim()).filter(k => k).length : 0;
+      
+      if ((isRateLimit || isAuthError) && validKeysCount > 1 && retryCount < validKeysCount) {
+        console.log(`%c[AI Rotation] ⚠️ Lỗi Key hiện tại. Tự động chuyển sang Key tiếp theo (Thử lại ${retryCount + 1}/${validKeysCount})...`, "color: #f59e0b; font-weight: bold;");
+        this.updateConfig();
+        return this.generateContentWithRetry(params, retryCount + 1);
+      }
+      
+      throw apiError;
     }
   }
 
@@ -223,7 +229,7 @@ class GeminiService {
       };
 
       try {
-          const response = await this.ai.models.generateContent({
+          const response = await this.generateContentWithRetry({
               model: this.getModel('chronos', CHRONOS_MODEL),
               contents: { role: 'user', parts: [{ text: "Calculate new time." }] },
               config: {
@@ -276,7 +282,7 @@ class GeminiService {
       };
 
       try {
-          const response = await this.ai.models.generateContent({
+          const response = await this.generateContentWithRetry({
               model: this.getModel('chronos', CHRONOS_MODEL),
               contents: { role: 'user', parts: [{ text: `Diễn biến gần đây: ${recentNarrative}\nHành động của người chơi: ${userPrompt}` }] },
               config: {
@@ -569,28 +575,23 @@ class GeminiService {
       const selectedModel = this.getModel('main', modelName || DEFAULT_MODEL);
 
       let response;
-      try {
-        response = await this.ai.models.generateContent({
-          model: selectedModel,
-          contents: contents,
-          config: {
-            systemInstruction: systemInstruction,
-            responseMimeType: 'application/json',
-            responseSchema: schema,
-            temperature: 0.85, // Giảm từ 0.85 xuống 0.7 để bớt ảo giác
-            topP: 0.9, // Thêm topP
-            topK: 40, // Thêm topK
-            safetySettings: SAFETY_SETTINGS as any,
-            maxOutputTokens: 8192, 
-            stopSequences: ["(End). (End).", "(End).(End)."],
-            // Tắt Thinking Mode ở lượt 1 (Flash) để tối đa tốc độ, bật lại ở lượt 2 (Pro)
-            ...(isFirstTurn ? {} : { thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } })
-          }
-        });
-      } catch (apiError) {
-        console.error("API Call Error:", apiError);
-        throw apiError; // Re-throw if it's a network/API error
-      }
+      response = await this.generateContentWithRetry({
+        model: selectedModel,
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          responseMimeType: 'application/json',
+          responseSchema: schema,
+          temperature: 0.85, // Giảm từ 0.85 xuống 0.7 để bớt ảo giác
+          topP: 0.9, // Thêm topP
+          topK: 40, // Thêm topK
+          safetySettings: SAFETY_SETTINGS as any,
+          maxOutputTokens: 8192, 
+          stopSequences: ["(End). (End).", "(End).(End)."],
+          // Tắt Thinking Mode ở lượt 1 (Flash) để tối đa tốc độ, bật lại ở lượt 2 (Pro)
+          ...(isFirstTurn ? {} : { thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } })
+        }
+      });
 
       const text = response.text || "{}";
       
@@ -940,7 +941,7 @@ class GeminiService {
     `;
 
     try {
-      const response = await this.ai.models.generateContent({
+      const response = await this.generateContentWithRetry({
         model: this.getModel('chronos', CHRONOS_MODEL), // Dùng model nhanh cho việc này
         contents: { role: 'user', parts: [{ text: `Hãy viết mô tả chi tiết cho năng lực: ${name}` }] },
         config: {
@@ -991,7 +992,7 @@ class GeminiService {
       };
 
       try {
-          const response = await this.ai.models.generateContent({
+          const response = await this.generateContentWithRetry({
               model: this.getModel('main', DEFAULT_MODEL),
               contents: prompt,
               config: {
