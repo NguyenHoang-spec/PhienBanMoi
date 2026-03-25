@@ -1,7 +1,7 @@
 // --- AI Client Service with Key Rotation ---
 
 import { GoogleGenAI } from "@google/genai";
-import { AppSettings } from "../../types";
+import { AppSettings } from "../types";
 
 // Biến đếm toàn cục để nhớ vị trí Key cuối cùng đã dùng
 let currentKeyIndex = 0;
