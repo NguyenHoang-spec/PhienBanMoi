@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db, findRelevantContext, findRelevantWiki, findRelevantTurns } from './db';
-import { geminiService } from './services/geminiService';
+import { geminiService, parseJSONResponse } from './services/geminiService';
 import { localEmbeddingService } from './services/embeddingService';
 import { GameSession, Turn, GameGenre, AIResponseSchema, WorldSettings, CharacterTraits, StoryLength, RegistryEntry, NSFWIntensity, WritingStyle, NSFWFocus, AIStyle, GameMechanics, GalleryImage } from './types';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -30,27 +30,39 @@ function App() {
     localEmbeddingService.embedTextLocal("warmup").catch(console.error);
 
     const unsubscribe = localEmbeddingService.onProgress((progress: any) => {
+      const isDownloaded = localStorage.getItem('td_model_downloaded') === 'true';
+
       if (progress.status === 'initiate') {
-        setIsModelLoading(true);
-        setModelLoadingStatus(`Khởi tạo tải: ${progress.file}...`);
+        if (!isDownloaded) {
+          setIsModelLoading(true);
+          setModelLoadingStatus(`Khởi tạo tải: ${progress.file}...`);
+        }
       } else if (progress.status === 'progress') {
-        setModelLoadingProgress(prev => ({
-          ...prev,
-          [progress.file]: progress.progress
-        }));
-        setModelLoadingStatus(`Đang tải dữ liệu trí nhớ...`);
+        if (!isDownloaded) {
+          setModelLoadingProgress(prev => ({
+            ...prev,
+            [progress.file]: progress.progress
+          }));
+          setModelLoadingStatus(`Đang tải dữ liệu trí nhớ...`);
+        }
       } else if (progress.status === 'done') {
-        // We don't immediately hide to show 100% for a moment
-        setModelLoadingProgress(prev => ({
-          ...prev,
-          [progress.file]: 100
-        }));
+        if (!isDownloaded) {
+          setModelLoadingProgress(prev => ({
+            ...prev,
+            [progress.file]: 100
+          }));
+        }
       } else if (progress.status === 'ready') {
-        setModelLoadingStatus("Hệ thống trí nhớ đã sẵn sàng!");
-        setTimeout(() => {
+        localStorage.setItem('td_model_downloaded', 'true');
+        if (!isDownloaded) {
+          setModelLoadingStatus("Hệ thống trí nhớ đã sẵn sàng!");
+          setTimeout(() => {
+            setIsModelLoading(false);
+            setModelLoadingProgress({});
+          }, 1000);
+        } else {
           setIsModelLoading(false);
-          setModelLoadingProgress({});
-        }, 1000);
+        }
       }
     });
     return unsubscribe;
@@ -335,7 +347,7 @@ function App() {
                 let text = "";
                 if (item.type === 'turn') {
                     const turn = item.data as Turn;
-                    text = turn.rawResponseJSON ? JSON.parse(turn.rawResponseJSON).narrative : (turn.narrative || "");
+                    text = turn.rawResponseJSON ? parseJSONResponse(turn.rawResponseJSON).narrative : (turn.narrative || "");
                 } else {
                     const entry = item.data as RegistryEntry;
                     text = `${entry.name} (${entry.type}): ${entry.description}`;
@@ -427,12 +439,24 @@ function App() {
       }
   };
 
+  const updateTurnField = async (turnIndex: number, field: keyof Turn, value: any) => {
+      if (!session) return;
+      try {
+          const updatedTurns = [...turns];
+          updatedTurns[turnIndex] = { ...updatedTurns[turnIndex], [field]: value };
+          setTurns(updatedTurns);
+          await db.turns.update(updatedTurns[turnIndex].id!, { [field]: value });
+      } catch (e) {
+          console.error("Failed to update turn field", e);
+      }
+  };
+
   // Helper to restore stats from last turn
   const restoreDerivedState = (history: Turn[]) => {
     const lastModelTurn = [...history].reverse().find(t => t.role === 'model');
     if (lastModelTurn && lastModelTurn.rawResponseJSON) {
         try {
-            const parsed = JSON.parse(lastModelTurn.rawResponseJSON);
+            const parsed = parseJSONResponse(lastModelTurn.rawResponseJSON);
             
             // --- CRITICAL FIX: SANITIZE DATA ON LOAD TO PREVENT CRASH ---
             let newStats: any = (parsed.stats && typeof parsed.stats === 'object') ? { ...parsed.stats } : {};
@@ -955,6 +979,7 @@ function App() {
                 onExport={handleExportSave}
                 onSave={handleManualSave} 
                 onUpdateSession={updateSessionField}
+                onUpdateTurn={updateTurnField}
               />
           </ErrorBoundary>
         )}
