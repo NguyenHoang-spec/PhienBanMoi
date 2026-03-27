@@ -1,63 +1,9 @@
-// --- AI Client Service with Key Rotation ---
+// --- AI Client Service ---
 
 import { GoogleGenAI } from "@google/genai";
 import { AppSettings } from "../types";
 
-// SAFELY override fetch using defineProperty to handle "only a getter" environments
-const originalFetch = window.fetch;
-
-try {
-  Object.defineProperty(window, 'fetch', {
-    configurable: true,
-    enumerable: true,
-    get: () => async (...args: [RequestInfo | URL, RequestInit?]) => {
-      const [resource, config] = args;
-      const url = typeof resource === 'string' ? resource : resource instanceof URL ? resource.href : (resource as Request).url;
-      
-      // Các mã lỗi sẽ được tự động thử lại (429 là Too Many Requests)
-      const RETRYABLE_STATUS_CODES = [401, 429, 502, 503, 504];
-      const MAX_RETRIES = 3; // Thử lại tối đa 3 lần
-      
-      const performFetch = async (targetUrl: string, targetConfig: RequestInit | undefined, attempt: number = 0): Promise<Response> => {
-        try {
-          const response = await originalFetch(targetUrl, targetConfig);
-          
-          // NẾU BỊ LỖI 429 VÀ CHƯA QUÁ SỐ LẦN THỬ
-          if (RETRYABLE_STATUS_CODES.includes(response.status) && attempt < MAX_RETRIES) {
-            // Tính toán thời gian đợi: Lần 1 đợi 2s, lần 2 đợi 4s, lần 3 đợi 8s...
-            const delay = response.status === 401 ? 2000 : Math.pow(2, attempt + 1) * 1000;
-            console.log(`%c[Fetch Guard] 🔄 Thử lại lần ${attempt + 1}/${MAX_RETRIES} (Status: ${response.status}) sau ${delay}ms...`, "color: #f59e0b; font-weight: bold;");
-            
-            // Bắt hệ thống "ngủ" một lúc
-            await new Promise(resolve => setTimeout(resolve, delay));
-            
-            // Gọi lại chính nó (Đệ quy)
-            return performFetch(targetUrl, targetConfig, attempt + 1);
-          }
-          
-          return response;
-        } catch (error) {
-          // Xử lý khi rớt mạng hoàn toàn
-          if (attempt < MAX_RETRIES) {
-            const delay = Math.pow(2, attempt + 1) * 1000;
-            console.log(`%c[Fetch Guard] 🌐 Lỗi mạng, thử lại lần ${attempt + 1}/${MAX_RETRIES} sau ${delay}ms...`, "color: #ef4444; font-weight: bold;");
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return performFetch(targetUrl, targetConfig, attempt + 1);
-          }
-          throw error;
-        }
-      };
-
-      // Bắt đầu thực thi fetch đã được bảo vệ
-      return performFetch(url, config);
-    }
-  });
-} catch (e) {
-  console.error("[AI Client] Không thể ghi đè fetch toàn cục.", e);
-}
-
-// Biến toàn cục để nhớ vị trí Key đang dùng (Round Robin)
-let currentKeyIndex = 0;
+// The infinite retry fetch override has been removed to rely on geminiService.ts's exponential backoff retry logic.
 
 export const getAiClient = (settings: AppSettings) => {
   let apiKey: string = "";
@@ -68,25 +14,10 @@ export const getAiClient = (settings: AppSettings) => {
     apiKey = settings.proxyKey;
     source = "PROXY";
   } 
-  // 2. Nếu không dùng Proxy, thực hiện xoay Key từ danh sách cá nhân
-  else if (settings?.geminiApiKey && Array.isArray(settings.geminiApiKey)) {
-    // Lọc bỏ các key rỗng hoặc key mặc định
-    const keys = settings.geminiApiKey.filter(k => k && k.trim() !== "" && k !== "YOUR_API_KEY");
-    
-    if (keys.length > 0) {
-        // Thuật toán xoay vòng (Round Robin)
-        const index = currentKeyIndex % keys.length;
-        apiKey = keys[index];
-        source = `PERSONAL_LIST (Key #${index + 1})`;
-        
-        // Tăng index cho lần gọi tiếp theo
-        currentKeyIndex = (index + 1) % keys.length;
-    }
-  }
 
   // Fallback nếu không có key nào
   if (!apiKey) {
-    apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY || "";
+    apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || "";
     source = "SYSTEM_ENV";
   }
   
@@ -96,24 +27,64 @@ export const getAiClient = (settings: AppSettings) => {
   let genAIConfig: any = { apiKey };
 
   if (settings.useProxy && settings.proxyUrl) {
-    genAIConfig.apiKey = "PROXY_MODE";
-    genAIConfig.httpClient = {
-      fetch: (url: string, options: RequestInit) => {
-        const cleanProxy = settings.proxyUrl!.trim().replace(/\/+$/, '').replace(/\/v1beta$|\/v1$/, '');
+    // We MUST pass the actual apiKey here so the SDK includes it in the headers
+    // If we pass "PROXY_MODE", the proxy server will receive "PROXY_MODE" as the key and reject it.
+    genAIConfig.apiKey = apiKey || "PROXY_MODE";
+    
+    // Clean the proxy URL robustly
+    // Handle cases where user pastes the full endpoint URL or trailing slashes/versions
+    let cleanProxy = settings.proxyUrl.trim().replace(/\/+$/, '');
+    cleanProxy = cleanProxy
+      .replace(/\/v1beta\/models\/.*$/, '')
+      .replace(/\/v1alpha\/models\/.*$/, '')
+      .replace(/\/v1\/models\/.*$/, '')
+      .replace(/\/v1beta$/, '')
+      .replace(/\/v1alpha$/, '')
+      .replace(/\/v1$/, '');
+    
+    // The new @google/genai SDK supports baseUrl directly
+    genAIConfig.baseUrl = cleanProxy;
+    
+    const customFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      try {
+        let urlStr = '';
+        if (typeof input === 'string') {
+          urlStr = input;
+        } else if (input instanceof URL) {
+          urlStr = input.href;
+        } else if (input instanceof Request) {
+          urlStr = input.url;
+        }
         
-        if (url.includes(cleanProxy)) {
-          return window.fetch(url, options);
+        if (urlStr.includes(cleanProxy)) {
+          return window.fetch(input, init);
         }
         
         const googleBase = 'https://generativelanguage.googleapis.com';
-        if (url.startsWith(googleBase)) {
-          const newUrl = url.replace(googleBase, cleanProxy);
-          return window.fetch(newUrl, options);
+        if (urlStr.startsWith(googleBase)) {
+          const newUrlStr = urlStr.replace(googleBase, cleanProxy);
+          
+          if (input instanceof Request) {
+            // Reconstruct the request with the new URL
+            const newReq = new Request(newUrlStr, input);
+            return window.fetch(newReq, init);
+          } else {
+            return window.fetch(newUrlStr, init);
+          }
         }
         
-        return window.fetch(url, options);
+        return window.fetch(input, init);
+      } catch (e) {
+        console.error("[Proxy Fetch Error]", e);
+        return window.fetch(input, init);
       }
     };
+
+    // The new @google/genai SDK supports httpOptions
+    genAIConfig.httpOptions = { fetch: customFetch };
+    
+    // We still keep the httpClient override for older versions
+    genAIConfig.httpClient = { fetch: customFetch };
   }
 
   const genAI = new (GoogleGenAI as any)(genAIConfig);
