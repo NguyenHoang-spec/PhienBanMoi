@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Turn, GameSession, StoryLength, RegistryEntry, GameOption, GameStats, NSFWFocus, GalleryImage } from '../types';
 import { db } from '../db';
-import { geminiService } from '../services/geminiService';
+import { geminiService, parseJSONResponse } from '../services/geminiService';
 import { WorldLawsManager } from './WorldLawsManager';
 import { AbilitiesModal } from './AbilitiesModal';
 
@@ -21,6 +21,7 @@ interface GameUIProps {
   onExport: () => void;
   onSave: () => void; 
   onUpdateSession: (field: keyof GameSession, value: any) => void;
+  onUpdateTurn: (turnIndex: number, field: keyof Turn, value: any) => void;
 }
 
 const FONTS = [
@@ -258,7 +259,8 @@ const NarrativeDisplay: React.FC<{
     fontSize?: string;
     lineHeight?: string;
     turnsLength: number;
-}> = ({ text, worldEvents, wikiEntries, onWikiClick, style, isLivingWorldEnabled, fontSize, lineHeight, turnsLength }) => {
+    imageUrl?: string;
+}> = ({ text, worldEvents, wikiEntries, onWikiClick, style, isLivingWorldEnabled, fontSize, lineHeight, turnsLength, imageUrl }) => {
   const [isEventsExpanded, setIsEventsExpanded] = useState(true);
 
   const validEntries = useMemo(() => {
@@ -370,6 +372,16 @@ const NarrativeDisplay: React.FC<{
              )}
           </div>
       )}
+      {imageUrl && (
+          <div className="mt-6 flex justify-center animate-fade-in">
+              <img 
+                  src={imageUrl} 
+                  alt="Generated Illustration" 
+                  className="max-w-full h-auto rounded-lg shadow-lg border border-ink-800/50"
+                  referrerPolicy="no-referrer"
+              />
+          </div>
+      )}
     </div>
   );
 };
@@ -389,7 +401,8 @@ export const GameUI: React.FC<GameUIProps> = ({
   onDelete,
   onExport,
   onSave, 
-  onUpdateSession
+  onUpdateSession,
+  onUpdateTurn
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -419,6 +432,7 @@ export const GameUI: React.FC<GameUIProps> = ({
   const [newWikiType, setNewWikiType] = useState<'NPC' | 'LOCATION' | 'ITEM' | 'FACTION' | 'SKILL'>('NPC');
   const [newWikiDesc, setNewWikiDesc] = useState('');
   const [isGeneratingWiki, setIsGeneratingWiki] = useState(false); // NEW: Auto-fill state
+  const [generatingImageIndex, setGeneratingImageIndex] = useState<number | null>(null); // NEW: Image Generation state
 
   // GALLERY STATES
   const [appearanceTab, setAppearanceTab] = useState<'SETTINGS' | 'GALLERY'>('SETTINGS');
@@ -638,6 +652,29 @@ export const GameUI: React.FC<GameUIProps> = ({
           const text = getLatestNarrative();
           if (text) speakText(text);
           else alert("Không tìm thấy nội dung để đọc.");
+      }
+  };
+
+  const handleGenerateImage = async (turnIndex: number, narrative: string) => {
+      if (generatingImageIndex !== null) return;
+      setGeneratingImageIndex(turnIndex);
+      try {
+          // Create a prompt based on the narrative
+          const prompt = `Create an illustration for this scene in a ${genre} story: ${narrative.substring(0, 500)}...`;
+          const nsfwIntensity = session.nsfwIntensity || 'none';
+          
+          const imageUrl = await geminiService.generateImage(prompt, nsfwIntensity);
+          
+          if (imageUrl) {
+              onUpdateTurn(turnIndex, 'imageUrl', imageUrl);
+          } else {
+              alert("Không thể tạo ảnh. Vui lòng thử lại.");
+          }
+      } catch (error) {
+          console.error("Error generating image:", error);
+          alert("Có lỗi xảy ra khi tạo ảnh.");
+      } finally {
+          setGeneratingImageIndex(null);
       }
   };
 
@@ -1864,10 +1901,11 @@ export const GameUI: React.FC<GameUIProps> = ({
             )}
 
             {displayedTurns.map((turn, idx) => {
+               const globalIdx = (currentPage - 1) * ITEMS_PER_PAGE + idx;
                let worldEvents: string[] | undefined = undefined;
                if (turn.role === 'model' && turn.rawResponseJSON) {
                    try {
-                       const json = JSON.parse(turn.rawResponseJSON);
+                       const json = parseJSONResponse(turn.rawResponseJSON);
                        if (Array.isArray(json.worldEvents)) {
                            worldEvents = json.worldEvents;
                        }
@@ -1888,7 +1926,23 @@ export const GameUI: React.FC<GameUIProps> = ({
                             fontSize={session.fontSize}
                             lineHeight={session.lineHeight}
                             turnsLength={turns.length}
+                            imageUrl={turn.imageUrl}
                           />
+                          {!turn.imageUrl && (
+                              <div className="mt-4 flex justify-center">
+                                  <button
+                                      onClick={() => handleGenerateImage(globalIdx, turn.narrative || '')}
+                                      disabled={generatingImageIndex !== null || loading}
+                                      className="px-4 py-2 bg-ink-900/80 hover:bg-ink-800 border border-gold-500/30 hover:border-gold-500/60 rounded-lg text-gold-400 text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                      {generatingImageIndex === globalIdx ? (
+                                          <><i className="fas fa-spinner fa-spin"></i> Đang tạo ảnh...</>
+                                      ) : (
+                                          <><i className="fas fa-image"></i> Tạo ảnh minh họa</>
+                                      )}
+                                  </button>
+                              </div>
+                          )}
                         </div>
                     ) : (
                         <div className="flex justify-center my-8 animate-slide-up">
