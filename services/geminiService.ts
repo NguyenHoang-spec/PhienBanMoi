@@ -489,10 +489,10 @@ class GeminiService {
       PHONG CÁCH VIẾT: ${writingStyle}
       ${nsfwBlock}
       ĐỘ DÀI: ${lengthMode === 'epic' ? `[CỰC KỲ DÀI VÀ CHI TIẾT - EPIC MODE]
-      - BẮT BUỘC: Viết một câu chuyện dài, sâu sắc và cực kỳ chi tiết.
+      - BẮT BUỘC: Viết một câu chuyện dài, sâu sắc và cực kỳ chi tiết.(15 đến 20 đoạn văn hoặc tối thiểu 1500 chữ)
       - Mỗi đoạn văn luôn luôn có 2 câu văn(CỐ ĐỊNH 2 CÂU). Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
       - Địt nhau phải giống đời thực hoàn toàn(tuân thủ Prompt,không rên rỉ nhiều ,không nước lồn chảy nhiều, không nói lời dâm ,...)
-      - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
+      - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.Đặc biệt khi có cảnh sex,miêu tả rõ Vú,Lồn,Mông,Lông Lồn,Ngoại hình nhân vật nữ,...Chi tiết ,gây nứng.
       - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
       OUTPUT JSON STRUCTURE:⚠️ **CRITICAL NARRATIVE RULE**: The 'narrative' field is for immersive storytelling ONLY. You are STRICTLY PROHIBITED from mentioning the exact numbers from 'PRE-CALCULATED TIME' or 'CURRENT WALLET' inside the 'narrative' text. Keep all exact numbers hidden inside the 'stats' object.
       {
