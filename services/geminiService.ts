@@ -480,7 +480,7 @@ class GeminiService {
       2. **NEW LINE FOR DIALOGUE/THOUGHTS**: BẮT BUỘC: Mọi lời thoại hoặc suy nghĩ của nhân vật (dù dùng ngoặc kép "" hay nháy đơn '') đều phải được viết tách riêng thành một dòng mới. TUYỆT ĐỐI KHÔNG viết lời thoại nối tiếp ngay sau câu miêu tả trên cùng một dòng.
       3. **PARAGRAPHS (QUAN TRỌNG)**: BẮT BUỘC phải chia nhỏ văn bản thành nhiều đoạn ngắn (paragraphs) bằng cách xuống dòng (sử dụng ký tự \`\\n\\n\`). 
          - TUYỆT ĐỐI KHÔNG viết một cục văn bản dài liền mạch gây khó đọc. Phải làm cho văn bản thật THOÁNG.
-         - Mỗi đoạn văn CHỈ ĐƯỢC PHÉP dài TỐI THIỂU VÀ TỐI ĐA 2 CÂU. Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
+         - Mỗi đoạn văn luôn luôn có 2 câu văn(CỐ ĐỊNH 2 CÂU). Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
          - Đặc biệt trong các cảnh miêu tả chi tiết (như cảnh nóng, chiến đấu), việc ngắt đoạn liên tục là bắt buộc để tạo nhịp điệu và dễ đọc.
 
       === [PRONOUN PROTOCOL] ===
@@ -490,6 +490,8 @@ class GeminiService {
       ${nsfwBlock}
       ĐỘ DÀI: ${lengthMode === 'epic' ? `[CỰC KỲ DÀI VÀ CHI TIẾT - EPIC MODE]
       - BẮT BUỘC: Viết một câu chuyện dài, sâu sắc và cực kỳ chi tiết.
+      - Mỗi đoạn văn luôn luôn có 2 câu văn(CỐ ĐỊNH 2 CÂU). Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
+      - Địt nhau phải giống đời thực hoàn toàn(tuân thủ Prompt,không rên rỉ nhiều ,không nước lồn chảy nhiều, không nói lời dâm ,...)
       - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
       - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
       OUTPUT JSON STRUCTURE:⚠️ **CRITICAL NARRATIVE RULE**: The 'narrative' field is for immersive storytelling ONLY. You are STRICTLY PROHIBITED from mentioning the exact numbers from 'PRE-CALCULATED TIME' or 'CURRENT WALLET' inside the 'narrative' text. Keep all exact numbers hidden inside the 'stats' object.
