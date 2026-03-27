@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { GameSession, Turn, RegistryEntry, GameGenre, GameMechanics, GalleryImage } from '../types';
 import { db } from '../db';
+import { parseJSONResponse } from '../services/geminiService';
 
 interface LandingScreenProps {
   onNewGame: () => void;
@@ -327,7 +328,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   const [proxyModelMain, setProxyModelMain] = useState(localStorage.getItem('td_proxy_model_main') || localStorage.getItem('td_proxy_model') || '');
   const [proxyModelChronos, setProxyModelChronos] = useState(localStorage.getItem('td_proxy_model_chronos') || '');
   const [proxyModelArchivist, setProxyModelArchivist] = useState(localStorage.getItem('td_proxy_model_archivist') || '');
-  const [geminiApiKeys, setGeminiApiKeys] = useState(localStorage.getItem('td_gemini_api_keys') || '');
+  const [proxyModelImage, setProxyModelImage] = useState(localStorage.getItem('td_proxy_model_image') || '');
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -364,7 +365,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
             if (lastTurn) {
                 if (lastTurn.role === 'model' && lastTurn.rawResponseJSON) {
                     try {
-                        const json = JSON.parse(lastTurn.rawResponseJSON);
+                        const json = parseJSONResponse(lastTurn.rawResponseJSON);
                         if (json.stats?.realm) realm = json.stats.realm;
                     } catch {}
                 }
@@ -631,7 +632,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                 
                 let jsonBody: any = {};
                 try {
-                    jsonBody = targetTurn.rawResponseJSON ? JSON.parse(targetTurn.rawResponseJSON) : {};
+                    jsonBody = targetTurn.rawResponseJSON ? parseJSONResponse(targetTurn.rawResponseJSON) : {};
                 } catch {}
 
                 // Map Global Inventory
@@ -835,7 +836,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
           let lastActive = new Date(newSession.createdAt).toLocaleDateString('vi-VN');
           if (lastTurn && lastTurn.role === 'model' && lastTurn.rawResponseJSON) {
               try {
-                  const json = JSON.parse(lastTurn.rawResponseJSON);
+                  const json = parseJSONResponse(lastTurn.rawResponseJSON);
                   if (json.stats?.realm) realm = json.stats.realm;
               } catch {}
           }
@@ -1022,7 +1023,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
       localStorage.setItem('td_proxy_model_main', proxyModelMain);
       localStorage.setItem('td_proxy_model_chronos', proxyModelChronos);
       localStorage.setItem('td_proxy_model_archivist', proxyModelArchivist);
-      localStorage.setItem('td_gemini_api_keys', geminiApiKeys);
+      localStorage.setItem('td_proxy_model_image', proxyModelImage);
       setShowProxySettingsModal(false);
       window.location.reload();
   };
@@ -1543,18 +1544,6 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                   </div>
                   
                   <div className="space-y-6 mb-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                       <div className="space-y-1">
-                           <label className="text-[10px] font-bold text-ink-500 uppercase">Danh sách API Key (Mỗi dòng 1 Key)</label>
-                           <textarea 
-                               value={geminiApiKeys}
-                               onChange={(e) => setGeminiApiKeys(e.target.value)}
-                               placeholder="AIzaSy...\nAIzaSy...\nAIzaSy..."
-                               rows={3}
-                               className="w-full bg-ink-950 border border-ink-800 rounded-lg px-3 py-2 text-xs text-parchment-200 focus:border-emerald-500/50 outline-none resize-none"
-                           />
-                           <div className="text-[10px] text-ink-500 mt-1">Hệ thống sẽ tự động xoay vòng (Round Robin) các key này nếu không dùng Proxy.</div>
-                       </div>
-
                        <div className="flex items-center justify-between border-t border-white/5 pt-4">
                            <div>
                                <div className="text-sm font-bold text-parchment-200">Bật Proxy</div>
@@ -1622,6 +1611,18 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                                        value={proxyModelArchivist}
                                        onChange={(e) => setProxyModelArchivist(e.target.value)}
                                        placeholder="Vd: gemini-3-flash-preview"
+                                       className="w-full bg-ink-950 border border-ink-800 rounded-lg px-3 py-2 text-xs text-parchment-200 focus:border-emerald-500/50 outline-none"
+                                   />
+                               </div>
+
+                               <div className="space-y-1">
+                                   <label className="text-[10px] font-bold text-ink-500 uppercase">Model Tạo Ảnh (Image)</label>
+                                   <input 
+                                       type="text"
+                                       list="proxy-models"
+                                       value={proxyModelImage}
+                                       onChange={(e) => setProxyModelImage(e.target.value)}
+                                       placeholder="Vd: gemini-3.1-flash-image"
                                        className="w-full bg-ink-950 border border-ink-800 rounded-lg px-3 py-2 text-xs text-parchment-200 focus:border-emerald-500/50 outline-none"
                                    />
                                    <datalist id="proxy-models">
