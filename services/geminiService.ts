@@ -91,6 +91,19 @@ const SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
 ];
 
+// Helper function to safely parse JSON from AI responses that might contain markdown blocks
+export const parseJSONResponse = (text: string): any => {
+  if (!text) return {};
+  try {
+    // Remove markdown code blocks if present
+    const cleanText = text.replace(/```json\n?|```/g, '').trim();
+    return JSON.parse(cleanText);
+  } catch (e) {
+    console.error("Failed to parse JSON response:", text);
+    throw e;
+  }
+};
+
 class GeminiService {
   private ai: GoogleGenAI;
 
@@ -103,36 +116,130 @@ class GeminiService {
     const useProxy = localStorage.getItem('td_use_proxy') === 'true';
     const proxyUrl = localStorage.getItem('td_proxy_url') || undefined;
     const proxyKey = localStorage.getItem('td_proxy_key') || undefined;
-    const geminiApiKeysStr = localStorage.getItem('td_gemini_api_keys');
-    const geminiApiKey = geminiApiKeysStr ? geminiApiKeysStr.split('\n').map(k => k.trim()).filter(k => k) : [];
 
     const settings: AppSettings = {
       useProxy,
       proxyUrl,
-      proxyKey,
-      geminiApiKey
+      proxyKey
     };
 
     this.ai = getAiClient(settings);
   }
 
+  private async callOpenAIFormat(params: any, proxyUrl: string, proxyKey: string | null, retryCount: number = 0): Promise<any> {
+    try {
+      const cleanProxy = proxyUrl.trim().replace(/\/+$/, '').replace(/\/v1beta$|\/v1$/, '');
+      const endpoint = `${cleanProxy}/v1/chat/completions`;
+
+      const messages: any[] = [];
+
+      if (params.config?.systemInstruction) {
+        let sysContent = params.config.systemInstruction;
+        if (typeof sysContent === 'object' && sysContent.parts) {
+          sysContent = sysContent.parts.map((p: any) => p.text).join('\n');
+        }
+        messages.push({ role: "system", content: sysContent });
+      }
+
+      if (typeof params.contents === 'string') {
+        messages.push({ role: "user", content: params.contents });
+      } else if (Array.isArray(params.contents)) {
+        for (const content of params.contents) {
+          const role = content.role === 'model' ? 'assistant' : 'user';
+          let text = "";
+          if (content.parts) {
+            text = content.parts.map((p: any) => p.text).join('\n');
+          } else if (typeof content === 'string') {
+            text = content;
+          }
+          messages.push({ role, content: text });
+        }
+      } else if (params.contents && typeof params.contents === 'object') {
+        const role = params.contents.role === 'model' ? 'assistant' : 'user';
+        let text = "";
+        if (params.contents.parts) {
+          text = params.contents.parts.map((p: any) => p.text).join('\n');
+        }
+        messages.push({ role, content: text });
+      }
+
+      const payload: any = {
+        model: params.model,
+        messages: messages,
+        temperature: params.config?.temperature ?? 0.7,
+      };
+
+      if (params.config?.responseMimeType === 'application/json') {
+        payload.response_format = { type: "json_object" };
+      }
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+      if (proxyKey) {
+        headers["Authorization"] = `Bearer ${proxyKey}`;
+      }
+
+      if (retryCount === 0) {
+          console.log(`%c[OpenAI Proxy] 🚀 Gửi request tới ${endpoint} (Model: ${params.model})`, "color: #10b981; font-weight: bold;");
+      }
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`OpenAI API Error ${res.status}: ${errText}`);
+      }
+
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content || "";
+
+      return { text: content };
+
+    } catch (apiError: any) {
+      console.error("OpenAI API Call Error:", apiError);
+      
+      const errorMessage = apiError.message || JSON.stringify(apiError) || "";
+      const isRateLimit = errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("exhausted") || errorMessage.includes("速率限制");
+      
+      if (isRateLimit && retryCount < 5) {
+        const delay = Math.pow(2, retryCount + 1) * 1500; 
+        console.log(`%c[OpenAI Retry] ⏳ Bị giới hạn tốc độ (Rate Limit). Đợi ${delay}ms rồi thử lại (Lần ${retryCount + 1})...`, "color: #f59e0b; font-weight: bold;");
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.callOpenAIFormat(params, proxyUrl, proxyKey, retryCount + 1);
+      }
+      
+      throw apiError;
+    }
+  }
+
   private async generateContentWithRetry(params: any, retryCount: number = 0): Promise<any> {
+    const useProxy = localStorage.getItem('td_use_proxy') === 'true';
+    const proxyUrl = localStorage.getItem('td_proxy_url');
+    const proxyKey = localStorage.getItem('td_proxy_key');
+
+    if (useProxy && proxyUrl) {
+      return this.callOpenAIFormat(params, proxyUrl, proxyKey, retryCount);
+    }
+
     try {
       return await this.ai.models.generateContent(params);
     } catch (apiError: any) {
       console.error("API Call Error:", apiError);
       
-      const errorMessage = apiError.message || "";
-      const isRateLimit = errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("exhausted");
-      const isAuthError = errorMessage.includes("400") || errorMessage.includes("API key not valid") || errorMessage.includes("403");
+      const errorMessage = apiError.message || JSON.stringify(apiError) || "";
+      const isRateLimit = errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("exhausted") || errorMessage.includes("速率限制");
       
-      const geminiApiKeysStr = localStorage.getItem('td_gemini_api_keys');
-      const validKeysCount = geminiApiKeysStr ? geminiApiKeysStr.split('\n').map(k => k.trim()).filter(k => k).length : 0;
-      
-      // Key Rotation: Nếu có nhiều key và gặp lỗi 429/403, tự động chuyển sang Key tiếp theo
-      if ((isRateLimit || isAuthError) && validKeysCount > 1 && retryCount < validKeysCount) {
-        console.log(`%c[AI Rotation] ⚠️ Lỗi Key hiện tại. Tự động chuyển sang Key tiếp theo (Thử lại ${retryCount + 1}/${validKeysCount})...`, "color: #f59e0b; font-weight: bold;");
-        this.updateConfig();
+      // Nếu là lỗi Rate Limit, thử đợi một chút rồi gọi lại
+      if (isRateLimit && retryCount < 5) {
+        // Tăng thời gian chờ: 3s, 6s, 12s, 24s, 48s...
+        const delay = Math.pow(2, retryCount + 1) * 1500; 
+        console.log(`%c[AI Retry] ⏳ Bị giới hạn tốc độ (Rate Limit). Đợi ${delay}ms rồi thử lại (Lần ${retryCount + 1})...`, "color: #f59e0b; font-weight: bold;");
+        await new Promise(resolve => setTimeout(resolve, delay));
         return this.generateContentWithRetry(params, retryCount + 1);
       }
       
@@ -243,7 +350,7 @@ class GeminiService {
               }
           });
           const text = response.text || "{}";
-          return JSON.parse(text);
+          return parseJSONResponse(text);
       } catch (e) {
           console.error("Chronos Error:", e);
           throw e;
@@ -296,7 +403,7 @@ class GeminiService {
               }
           });
           const text = response.text || "{}";
-          return JSON.parse(text).newCurrency || currentCurrency;
+          return parseJSONResponse(text).newCurrency || currentCurrency;
       } catch (e) {
           console.error("Treasurer Error:", e);
           throw e;
@@ -472,7 +579,7 @@ class GeminiService {
       2. **NEW LINE FOR DIALOGUE/THOUGHTS**: BẮT BUỘC: Mọi lời thoại hoặc suy nghĩ của nhân vật (dù dùng ngoặc kép "" hay nháy đơn '') đều phải được viết tách riêng thành một dòng mới. TUYỆT ĐỐI KHÔNG viết lời thoại nối tiếp ngay sau câu miêu tả trên cùng một dòng.
       3. **PARAGRAPHS (QUAN TRỌNG)**: BẮT BUỘC phải chia nhỏ văn bản thành nhiều đoạn ngắn (paragraphs) bằng cách xuống dòng (sử dụng ký tự \`\\n\\n\`). 
          - TUYỆT ĐỐI KHÔNG viết một cục văn bản dài liền mạch gây khó đọc. Phải làm cho văn bản thật THOÁNG.
-         - Luôn viết 2 câu trên 1 đoạn văn .Không được viết ít câu hơn hoặc nhiều câu hơn(Mặc định 2 câu văn trên 1 đoạn). Hết 3 câu là PHẢI XUỐNG DÒNG ngay lập tức.
+         - Mỗi đoạn văn CHỈ ĐƯỢC PHÉP dài TỐI THIỂU VÀ TỐI ĐA 2 CÂU. Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
          - Đặc biệt trong các cảnh miêu tả chi tiết (như cảnh nóng, chiến đấu), việc ngắt đoạn liên tục là bắt buộc để tạo nhịp điệu và dễ đọc.
 
       === [PRONOUN PROTOCOL] ===
@@ -481,8 +588,7 @@ class GeminiService {
       PHONG CÁCH VIẾT: ${writingStyle}
       ${nsfwBlock}
       ĐỘ DÀI: ${lengthMode === 'epic' ? `[CỰC KỲ DÀI VÀ CHI TIẾT - EPIC MODE]
-      - BẮT BUỘC: Viết một câu chuyện dài, sâu sắc và cực kỳ chi tiết(Khoảng 15 đến 20 đoạn hoặc tối thiểu 1500 chữ).
-      - Luôn viết 2 câu trên 1 đoạn văn .Không được viết ít câu hơn hoặc nhiều câu hơn.(Mặc định 2 câu văn trên 1 đoạn).Hết 2 câu là PHẢI XUỐNG DÒNG ngay lập tức.
+      - BẮT BUỘC: Viết một câu chuyện dài, sâu sắc và cực kỳ chi tiết.
       - Mọi cử động nhỏ nhất (hơi thở, ánh mắt, cái nhíu mày, bước chân) đều phải được "zoom cận cảnh" và miêu tả cặn kẽ như một thước phim quay chậm.
       - Show, don't tell. Không được nói "anh ấy rất buồn", phải miêu tả "đôi mắt anh chùng xuống, bàn tay siết chặt đến mức gân xanh nổi lên, hơi thở nghẹn lại trong lồng ngực".` : lengthMode}
       OUTPUT JSON STRUCTURE:⚠️ **CRITICAL NARRATIVE RULE**: The 'narrative' field is for immersive storytelling ONLY. You are STRICTLY PROHIBITED from mentioning the exact numbers from 'PRE-CALCULATED TIME' or 'CURRENT WALLET' inside the 'narrative' text. Keep all exact numbers hidden inside the 'stats' object.
@@ -629,7 +735,7 @@ class GeminiService {
       };
 
       try {
-        const parsed = JSON.parse(text);
+        const parsed = parseJSONResponse(text);
         if (parsed.narrative) {
             parsed.narrative = formatNarrative(parsed.narrative);
         }
@@ -801,7 +907,7 @@ class GeminiService {
     };
 
     try {
-        const response = await this.ai.models.generateContent({
+        const response = await this.generateContentWithRetry({
             model: this.getModel('archivist', ARCHIVIST_MODEL),
             contents: [{ role: 'user', parts: [{ text: userMessage }] }],
             config: {
@@ -814,7 +920,7 @@ class GeminiService {
         });
 
         const text = response.text || "{}";
-        const parsed = JSON.parse(text);
+        const parsed = parseJSONResponse(text);
         
         return {
             newRegistry: Array.isArray(parsed.newRegistry) ? parsed.newRegistry : []
@@ -839,7 +945,7 @@ class GeminiService {
         required: ["worldContext", "plotDirection", "majorFactions", "keyNpcs"]
     };
 
-    const response = await this.ai.models.generateContent({
+    const response = await this.generateContentWithRetry({
         model: this.getModel('main', DEFAULT_MODEL),
         contents: `Genre: ${genre}. Prompt: ${prompt}. Generate JSON settings.`,
         config: { 
@@ -849,12 +955,11 @@ class GeminiService {
             safetySettings: SAFETY_SETTINGS as any
         }
     });
-    const cleanText = (response.text || "{}").replace(/```json\n?|```/g, '').trim();
-    return JSON.parse(cleanText);
+    return parseJSONResponse(response.text || "{}");
   }
 
   async generateSingleWorldField(genre: GameGenre, label: string, context: string, heroInfo: any): Promise<string> {
-    const response = await this.ai.models.generateContent({
+    const response = await this.generateContentWithRetry({
         model: this.getModel('main', DEFAULT_MODEL),
         contents: `Genre: ${genre}. Field: ${label}. Context: ${context}. Short generation.`,
         config: {
@@ -870,7 +975,7 @@ class GeminiService {
           ? `Tóm tắt cốt truyện cũ:\n${currentSummary}\n\nDiễn biến mới:\n${text}\n\nHãy viết một bản tóm tắt mới bao gồm cả cốt truyện cũ và diễn biến mới một cách súc tích.`
           : `Hãy tóm tắt diễn biến sau một cách súc tích:\n${text}`;
           
-      const response = await this.ai.models.generateContent({
+      const response = await this.generateContentWithRetry({
           model: this.getModel('archivist', ARCHIVIST_MODEL), // Use Lite for summary
           contents: prompt,
           config: {
@@ -882,7 +987,7 @@ class GeminiService {
   }
   
   async analyzeItem(itemName: string, context: string, genre: string): Promise<{description: string, type: string, rank: string, status?: string}> {
-      const response = await this.ai.models.generateContent({
+      const response = await this.generateContentWithRetry({
           model: this.getModel('main', DEFAULT_MODEL),
           contents: `Analyze: ${itemName}. JSON Output.`,
           config: { 
@@ -890,7 +995,7 @@ class GeminiService {
               safetySettings: SAFETY_SETTINGS as any
           }
       });
-      return JSON.parse(response.text || "{}");
+      return parseJSONResponse(response.text || "{}");
   }
 
   async generateWorldFromTitle(title: string, genre: string, heroInfo: any): Promise<WorldSettings> {
@@ -907,7 +1012,7 @@ class GeminiService {
           required: ["worldContext", "plotDirection", "majorFactions", "keyNpcs"]
       };
 
-      const response = await this.ai.models.generateContent({
+      const response = await this.generateContentWithRetry({
           model: this.getModel('main', DEFAULT_MODEL),
           contents: `Generate world from title: ${title}. JSON.`,
           config: { 
@@ -917,7 +1022,7 @@ class GeminiService {
               safetySettings: SAFETY_SETTINGS as any
           }
       });
-      return JSON.parse((response.text || "{}").replace(/```json\n?|```/g, '').trim());
+      return parseJSONResponse(response.text || "{}");
   }
   
   // NEW: Manual Auto-Fill Wiki Entry
@@ -1004,7 +1109,7 @@ class GeminiService {
                   safetySettings: SAFETY_SETTINGS as any
               }
           });
-          return JSON.parse(response.text || "{}");
+          return parseJSONResponse(response.text || "{}");
       } catch (e) {
           return { description: "Lỗi tạo thông tin." };
       }
@@ -1021,7 +1126,7 @@ class GeminiService {
 
           const modelToUse = this.getModel('image', 'gemini-2.5-flash-image');
 
-          const response = await this.ai.models.generateContent({
+          const response = await this.generateContentWithRetry({
               model: modelToUse,
               contents: {
                   parts: [
